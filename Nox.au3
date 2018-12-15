@@ -27,9 +27,5 @@ Func IsNoxRunning()
 EndFunc
 
 Func GetNoxHwnd()
-   ;return WinGetHandle($NOX_TITLE)
-
-   ;return ControlGetHandle($NOX_TITLE, "", $NOX_CONTROL)
-
-   return $gNoxHwnd;
+   Return $gNoxHwnd
 EndFunc

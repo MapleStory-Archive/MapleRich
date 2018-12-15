@@ -10,7 +10,7 @@
 
 ; Script Start - Add your code below here
 
-Global $programTitle = "MapleStory M Quest Bot"
+Global $programTitle = "MapleRich"
 Global $gVersion = "0.2"
 
 Global $gDebug = true
@@ -18,6 +18,8 @@ Global $gDebug = true
 Global $gRun = false
 
 Global $gBotStatus = "Inactive"
+
+Global $gLog = ""
 
 Global $gNoxIsRunning = false
 Global $gNoxHwnd

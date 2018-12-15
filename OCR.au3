@@ -22,27 +22,27 @@ Global $gOcrTmpDir = "tmp"
 
 Global $gTesseractPath = @ProgramFilesDir & "\Tesseract-OCR\tesseract.exe"
 
+;Global $gTesseractPath =  "lib\tesseract\tesseract.exe"
+
 
 Func OCR_SetTmpDir($dir)
    $gOcrTmpDir = $dir
 EndFunc
 
 
-Func OCR_GetTextFromWindow($left = 0, $top = 0, $right = 0, $bottom = 0, $hWnd = Null)
-   $captureFileNameNoExt = "ocrtmp"
-   $ocrFileNameNoExt = "ocr_result"
+Func OCR_GetTextFromWindow($name, $left = 0, $top = 0, $right = 0, $bottom = 0, $hWnd = Null)
+   $fullCaptureFileName = $gOcrTmpDir & "/" & $name & ".bmp"
+   $fullOCRFileName = $gOcrTmpDir & "/" & $name & ".txt"
 
-   $fullCaptureFileName = $gOcrTmpDir & "/" & $captureFileNameNoExt & ".bmp"
-   $fullOCRFileName = $gOcrTmpDir & "/" & $ocrFileNameNoExt & ".txt"
+   $savedResult = FFSaveBMP($gOcrTmpDir & "/" & $name, True, $left, $top, $right, $bottom, $gOcrSnapShotNum, $hWnd)
 
-   $savedResult = FFSaveBMP($gOcrTmpDir & "/" & $captureFileNameNoExt, True, $left, $top, $right, $bottom, $gOcrSnapShotNum, $hWnd)
-
-   ShellExecuteWait($gTesseractPath, $fullCaptureFileName & " " & $gOcrTmpDir & "/" & $ocrFileNameNoExt, "", "", @SW_HIDE)
+   ShellExecuteWait($gTesseractPath, $fullCaptureFileName & " " & $gOcrTmpDir & "/" & $name, "", "", @SW_HIDE)
 
    $ocr = FileRead($fullOCRFileName)
 
    ; Clean up
    FileDelete($fullCaptureFileName)
+   FileDelete($fullOCRFileName)
 
    Return $ocr
 EndFunc

@@ -21,59 +21,9 @@
 #include <OCR.au3>
 #include <Utils.au3>
 
-#AutoIt3Wrapper_Res_HiDpi=Y
 
-global const $WINDOW_X_OFFSET = 1
-global const $WINDOW_Y_OFFSET = 30
+FFSetDebugMode(0)
 
-FFSetDebugMode(3)
-
-;~ Func IsAutoQuesting()
-;~ ;~    PixelSearch(440, 930, 575, 1070, $COLOR_AUTOQUESTING, 3, 1, GetNoxHwnd())
-
-;~ ;~    If Not @error Then
-;~ ;~ 	  $gBotStatus = "Auto Questing"
-;~ ;~ 	  ConsoleLog("Auto questing.")
-;~ ;~ 	  Return True
-;~ ;~    EndIf
-
-;~ ;~    Return False
-
-;~    Local $x = 435
-;~    Local $y = 930
-;~    Local $width = 140
-;~    Local $height = 140
-
-;~    $goldPixels = FFColorCount(0xFAEEB5, 3, True, $x + $WINDOW_X_OFFSET, $y + $WINDOW_Y_OFFSET, $x + $WINDOW_X_OFFSET + $width, $y + $WINDOW_Y_OFFSET + $height, 0, GetNoxHwnd())
-
-;~    ConsoleLog("Gold Pixels: " & $goldPixels)
-
-;~    If ($goldPixels = 0) Then Return False
-
-;~    $goldPixels2 = FFColorCount(0xF9D690, 3, True, $x + $WINDOW_X_OFFSET, $y + $WINDOW_Y_OFFSET, $x + $WINDOW_X_OFFSET + $width, $y + $WINDOW_Y_OFFSET + $height, 0, GetNoxHwnd())
-
-;~    ConsoleLog("Gold Pixels 2: " & $goldPixels)
-
-;~    If ($goldPixels2 = 0) Then Return False
-
-;~    $whitePixels = FFColorCount(0xEDEDED, 3, True, $x + $WINDOW_X_OFFSET, $y + $WINDOW_Y_OFFSET, $x + $WINDOW_X_OFFSET + $width, $y + $WINDOW_Y_OFFSET + $height, 0, GetNoxHwnd())
-;~    $darkGrayPixels = FFColorCount(0x6B6B6B, 1, True, $x + $WINDOW_X_OFFSET, $y + $WINDOW_Y_OFFSET, $x + $WINDOW_X_OFFSET + $width, $y + $WINDOW_Y_OFFSET + $height, 0, GetNoxHwnd())
-
-;~    ; "Auto Quest" font color
-;~    ConsoleLog("White Pixels: " & $whitePixels)
-
-;~    ; "Auto" font color
-;~    ConsoleLog("Dark Gray Pixels: " & $darkGrayPixels)
-
-;~    If ($whitePixels = 0 And $darkGrayPixels = 0) Then
-;~ 	  Return False
-;~    EndIf
-
-
-;~    $gBotStatus = "Auto Questing"
-;~    ConsoleLog("Auto questing.")
-;~    Return True
-;~ EndFunc
 
 Func IsAutoQuesting()
    Local $text_x = 465
@@ -88,8 +38,11 @@ Func IsAutoQuesting()
 
    Local $hWnd = GetNoxHwnd()
 
+   Local $aTextTopLeft = GetRelativeCoords($hWnd, True, $text_x, $text_y)
+   Local $aTextBottomRight = GetRelativeCoords($hWnd, True, $text_x + $text_width, $text_y + $text_height)
 
-   $ocr = OCR_GetTextFromWindow($text_x + $WINDOW_X_OFFSET, $text_y + $WINDOW_Y_OFFSET, $text_x + $WINDOW_X_OFFSET + $text_width, $text_y + $WINDOW_Y_OFFSET + $text_height, $hWnd)
+   ; Attempt at using OCR to check if we're autoquesting
+   $ocr = OCR_GetTextFromWindow("AutoQuest-" & $gNoxTitle, $aTextTopLeft[0], $aTextTopLeft[1], $aTextBottomRight[0], $aTextBottomRight[1], $hWnd)
 
    ; Remove erroneous characters
    $ocr = StringReplace($ocr, ".", "")
@@ -102,20 +55,22 @@ Func IsAutoQuesting()
    If StringInStr($ocr, "Quest", 1) Then Return True
 
    ;If StringInStr($ocr, "Auto", 1) Then Return True
-   ; End attempt at using OCR to check if we're autoquesting
 
-   ; Begin checking for the auto quest pixel colors
 
-;~    ConsoleWrite($ocr & @CRLF)
-   $darkGrayPixels = FFColorCount(0x6B6B6B, 1, True, $auto_x + $WINDOW_X_OFFSET, $auto_y + $WINDOW_Y_OFFSET, $auto_x + $WINDOW_X_OFFSET + $auto_width, $auto_y + $WINDOW_Y_OFFSET + $auto_height, 0, $hWnd)
+   ; Checking for the auto quest pixel colors
+
+   Local $aAutoTopLeft = GetRelativeCoords($hWnd, True, $auto_x, $auto_y)
+   Local $aAutoBottomRight = GetRelativeCoords($hWnd, True, $auto_x + $auto_width, $auto_y + $auto_height)
+
+   $darkGrayPixels = FFColorCount(0x6B6B6B, 1, True, $aAutoTopLeft[0], $aAutoTopLeft[1], $aAutoBottomRight[0], $aAutoBottomRight[1], 0, $hWnd)
 
    If StringInStr($ocr, "AUTO", 1) And $darkGrayPixels < 5 Then Return False
 
-   $goldPixels = FFColorCount(0xFAEEB5, 3, True, $auto_x + $WINDOW_X_OFFSET, $auto_y + $WINDOW_Y_OFFSET, $auto_x + $WINDOW_X_OFFSET + $auto_width, $auto_y + $WINDOW_Y_OFFSET + $auto_height, 0, $hWnd)
+   $goldPixels = FFColorCount(0xFAEEB5, 3, True, $aAutoTopLeft[0], $aAutoTopLeft[1], $aAutoBottomRight[0], $aAutoBottomRight[1], 0, $hWnd)
 
-   $goldPixels2 = FFColorCount(0xF9D690, 3, True, $auto_x + $WINDOW_X_OFFSET, $auto_y + $WINDOW_Y_OFFSET, $auto_x + $WINDOW_X_OFFSET + $auto_width, $auto_y + $WINDOW_Y_OFFSET + $auto_height, 0, $hWnd)
+   $goldPixels2 = FFColorCount(0xF9D690, 3, True, $aAutoTopLeft[0], $aAutoTopLeft[1], $aAutoBottomRight[0], $aAutoBottomRight[1], 0, $hWnd)
 
-   $whitePixels = FFColorCount(0xEDEDED, 3, True, $auto_x + $WINDOW_X_OFFSET, $auto_y + $WINDOW_Y_OFFSET, $auto_x + $WINDOW_X_OFFSET + $auto_width, $auto_y + $WINDOW_Y_OFFSET + $auto_height, 0, $hWnd)
+   $whitePixels = FFColorCount(0xEDEDED, 3, True, $aAutoTopLeft[0], $aAutoTopLeft[1], $aAutoBottomRight[0], $aAutoBottomRight[1], 0, $hWnd)
 
 
 
@@ -137,56 +92,81 @@ Func IsAutoQuesting()
 
    If ($goldPixels > 0 And $goldPixels2 > 0 And ($whitePixels > 0 Or $darkGrayPixels > 0)) Then Return True
 
-   ;$text = _TesseractWinCapture($WINDOW_TITLE, "", 0, "", 0, 2, $x + $WINDOW_X_OFFSET, $y + $WINDOW_Y_OFFSET, $x + $WINDOW_X_OFFSET + $width, $y + $WINDOW_Y_OFFSET + $height)
    Return False
 EndFunc
 
 
 Func IsQuestMenuIconVisible()
-   ; Check if quest menu is visible
-   PixelSearch(50, 310, 100, 360, $COLOR_WHITE, 0, 1, GetNoxHwnd())
-
-   If Not @error Then
-	  ConsoleLog("Quest menu icon is visible.")
-	  Return True
-   EndIf
-
-    ConsoleLog("Couldn't find quest menu icon")
-   Return False
-EndFunc
-
-
-Func IsQuestMenuIconVisibleNew()
    Local $iMenuIconX = 45
    Local $iMenuIconY = 285
+
+   Local $iMenuExpandIconX = 32
+   Local $iMenuExpandIconY = 296
 
 
    Local $hWnd = GetNoxHwnd()
 
-   Local $aWinSizes = GetRelativeWindowSize($hWnd, True, $iMenuIconX, $iMenuIconY)
+   ; Check if menu expansion button is available
+   Local $aMenuExpandSizes = GetRelativeCoords($hWnd, True, $iMenuExpandIconX, $iMenuExpandIconY)
 
-   Local $iWhiteCount = FFColorCount($COLOR_WHITE, 0, True, $aWinSizes[0], $aWinSizes[1], $aWinSizes[0] + 1, $aWinSizes[1] + 1, 0, $hWnd)
+   Local $iMenuExpandCount = FFColorCount($COLOR_WHITE, 0, True, $aMenuExpandSizes[0], $aMenuExpandSizes[1], $aMenuExpandSizes[0] + 1, $aMenuExpandSizes[1] + 1, 0, $hWnd)
+
+
+   ; If available, click to expand
+   If $iMenuExpandCount > 0 Then
+	  ConsoleLog("Expanding quick menu.")
+
+	  ControlClick($hWnd, "", "", "left", 1, $aMenuExpandSizes[0], $aMenuExpandSizes[1])
+   EndIf
+
+
+   ; Check if quest menu icon is available
+   Local $aMenuIconSizes = GetRelativeCoords($hWnd, True, $iMenuIconX, $iMenuIconY)
+
+   Local $iWhiteCount = FFColorCount($COLOR_WHITE, 0, True, $aMenuIconSizes[0], $aMenuIconSizes[1], $aMenuIconSizes[0] + 1, $aMenuIconSizes[1] + 1, 0, $hWnd)
+
+   If $iWhiteCount > 0 Then
+	  ConsoleLog("Quest menu icon is visible.")
+	  Return True
+   EndIf
+
+   Return False
 EndFunc
 
 
 Func OpenQuestMenu()
-   ; Open Quest Menu
-   Local $questCoord = PixelSearch(50, 310, 100, 360, $COLOR_WHITE, 0, 1, GetNoxHwnd())
+   Local $iMenuIconX = 45
+   Local $iMenuIconY = 285
 
-   If Not @error Then
-	  ConsoleLog("opening quest menu. Position: " & $questCoord[0] & " " & $questCoord[1])
-	  ControlClick($gNoxTitle, "", "", "left", 2, $questCoord[0], $questCoord[1])
+   Local $hWnd = GetNoxHwnd()
+
+   ; Check if quest menu icon is available
+   Local $aMenuIconSizes = GetRelativeCoords($hWnd, True, $iMenuIconX, $iMenuIconY)
+
+   Local $iWhiteCount = FFColorCount($COLOR_WHITE, 0, True, $aMenuIconSizes[0], $aMenuIconSizes[1], $aMenuIconSizes[0] + 1, $aMenuIconSizes[1] + 1, 0, $hWnd)
+
+   If $iWhiteCount > 0 Then
+	  ConsoleLog("Opening quest menu.")
+	  ControlClick($hWnd, "", "", "left", 1, $aMenuIconSizes[0], $aMenuIconSizes[1])
    Else
-	  ConsoleLog("Couldnt find quest icon")
+	  ConsoleLog("Couldn't find quest icon in quick menu.")
    EndIf
 EndFunc
 
 
 Func IsQuestMenuVisible()
    ; Check if quest menu is visible
-   PixelSearch(0, 0, 30, 30, $COLOR_MENU_HEADER, 0, 1, GetNoxHwnd())
+   Local $iMenuX = 30
+   Local $iMenuY = 30
 
-   If Not @error Then
+   Local $hWnd = GetNoxHwnd()
+
+   ; Check if quest menu is available
+   Local $aMenu = GetRelativeCoords($hWnd, True, $iMenuX, $iMenuY)
+
+   Local $iMenuCount = FFColorCount($COLOR_MENU_HEADER, 0, True, $aMenu[0], $aMenu[1], $aMenu[0] + 1, $aMenu[1] + 1, 0, $hWnd)
+
+   If $iMenuCount > 0 Then
 	  ConsoleLog("Quest menu is visible.")
 	  Return True
    EndIf
@@ -196,79 +176,184 @@ EndFunc
 
 
 Func StartAutoQuest()
+   Local $hWnd = GetNoxHwnd()
+
+   Local $iAutoPlayBtnX = 1750
+   Local $iAutoPlayBtnY = 970
+
+   Local $iMenuCloseBtnX = 1865
+   Local $iMenuCloseBtnY = 60
+
    ; Select the first quest on the list
-   ControlClick("NoxPlayer", "", "", "left", 1, 650, 200)
+   ControlClick($hWnd, "", "", "left", 1, 650, 200)
 
    ; Check if the "Auto Play" button is there
-   Local $storyQuestCoord = PixelSearch(25, 150, 70, 200, $COLOR_ORANGE, 0, 1, GetNoxHwnd())
+   Local $aAutoPlayBtn = GetRelativeCoords($hWnd, True, $iAutoPlayBtnX, $iAutoPlayBtnY)
 
-   If Not @error Then
+   Local $iOrangeCount = FFColorCount($COLOR_ORANGE, 0, True, $aAutoPlayBtn[0], $aAutoPlayBtn[1], $aAutoPlayBtn[0] + 1, $aAutoPlayBtn[1] + 1, 0, $hWnd)
+
+   If $iOrangeCount > 0 Then
 	  ; Click the "Auto Play" button
+	  ControlClick($hWnd, "", "", "left", 1, $aAutoPlayBtn[0], $aAutoPlayBtn[1])
+
 	  ConsoleLog("Starting Auto Quest")
-	  ControlClick($gNoxTitle, "", "", "left", 1, 1750, 1000)
    EndIf
 
-   Sleep(250)
+   Sleep(1000)
 
    ; Check if the quest menu is still visible
-   PixelSearch(0, 0, 30, 30, $COLOR_MENU_HEADER, 0, 1, GetNoxHwnd())
+   If IsQuestMenuVisible() Then
+	  Local $aCloseBtn = GetRelativeCoords($hWnd, True, $iMenuCloseBtnX, $iMenuCloseBtnY)
+	  ControlClick($hWnd, "", "", "left", 1, $aCloseBtn[0], $aCloseBtn[1])
 
-   If Not @error Then
 	  ConsoleLog("Quest menu is still visible after starting auto quest. Attempting to close.")
-	  ControlClick($gNoxTitle, "", "", "left", 1, 1865, 65)
-	  Return True
    EndIf
+
 
 EndFunc
 
 
+Func IsQuestSkippable()
+   Local $hWnd = GetNoxHwnd()
+
+   Local $iSkipX = 190
+   Local $iSkipY = 84
+
+   Local $aSkipBtn = GetRelativeCoords($hWnd, True, $iSkipX, $iSkipY)
+
+   Local $iWhiteCount = FFColorCount($COLOR_WHITE, 0, True, $aSkipBtn[0], $aSkipBtn[1], $aSkipBtn[0] + 1, $aSkipBtn[1] + 1, 0, $hWnd)
+
+   If $iWhiteCount > 0 Then
+	  ConsoleLog("Skipping available.")
+	  Return True
+   EndIf
+
+   Return False
+EndFunc
+
+
+Func SkipQuestDialogue()
+   Local $hWnd = GetNoxHwnd()
+
+   Local $iSkipX = 190
+   Local $iSkipY = 84
+
+   Local $aSkipBtn = GetRelativeCoords($hWnd, True, $iSkipX, $iSkipY)
+
+   ControlClick($hWnd, "", "", "left", 1, $aSkipBtn[0], $aSkipBtn[1])
+EndFunc
+
+
 Func IsQuestDialogVisible()
+   Local $hWnd = GetNoxHwnd()
+
+   Local $iBagX = 1750
+   Local $iBagY = 40
+
+   Local $aBagBtn = GetRelativeCoords($hWnd, True, $iBagX, $iBagY)
+
    ; Check if we are in the quest dialog
-   PixelSearch(1750, 40, 1760, 60, $COLOR_BLACK_DIALOG_OVERLAY, 1, 1, GetNoxHwnd())
+   Local $iBlackOverlayCount = FFColorCount($COLOR_BLACK_DIALOG_OVERLAY, 0, True, $aBagBtn[0], $aBagBtn[1], $aBagBtn[0] + 1, $aBagBtn[1] + 1, 0, $hWnd)
+   Local $iBlackOverlayCount2 = FFColorCount($COLOR_BLACK_DIALOG_IN_MENU_OVERLAY, 0, True, $aBagBtn[0], $aBagBtn[1], $aBagBtn[0] + 1, $aBagBtn[1] + 1, 0, $hWnd)
 
-   If Not @error Then
+   If $iBlackOverlayCount > 0 Or $iBlackOverlayCount2 > 0 Then
 	  ConsoleLog("Quest dialog is visible.")
 	  Return True
    EndIf
 
-   PixelSearch(1750, 40, 1760, 60, $COLOR_BLACK_DIALOG_IN_MENU_OVERLAY, 1, 1, GetNoxHwnd())
-
-   If Not @error Then
-	  ConsoleLog("Quest dialog is visible.")
-	  Return True
-   EndIf
-
-   ConsoleLog("Not in quest dialog")
    Return False
 EndFunc
 
 
 Func CompleteQuestDialog()
+   Local $hWnd = GetNoxHwnd()
+
    ; Search for Green Complete button first
-   Local $greenCompleteCoord = PixelSearch(430, 780, 1900, 1050, $COLOR_TEAL, 0, 1, GetNoxHwnd())
+   Local $greenCompleteCoord = PixelSearch(430, 780, 1900, 1050, $COLOR_TEAL, 0, 1, $hWnd)
 
    If Not @error Then
 	  ConsoleLog("Clicking on completion! Position: " & $greenCompleteCoord[0] & " " & $greenCompleteCoord[1])
-	  ControlClick($gNoxTitle, "", "", "left", 1, $greenCompleteCoord[0], $greenCompleteCoord[1])
+	  ControlClick($hWnd, "", "", "left", 1, $greenCompleteCoord[0], $greenCompleteCoord[1])
 	  Return
    EndIf
 
    ; Search for Complete button
-   Local $completeCoord = PixelSearch(430, 780, 1900, 1050, $COLOR_ORANGE, 0, 1, GetNoxHwnd())
+   Local $completeCoord = PixelSearch(430, 780, 1900, 1050, $COLOR_ORANGE, 0, 1, $hWnd)
 
    If Not @error Then
 	  ConsoleLog("Clicking on completion! Position: " & $completeCoord[0] & " " & $completeCoord[1])
-	  ControlClick($gNoxTitle, "", "", "left", 1, $completeCoord[0], $completeCoord[1])
-   Else
-	  ConsoleLog("Attempting to skip dialog")
-	  ControlClick($gNoxTitle, "", "", "left", 1, 200, 90)
+	  ControlClick($hWnd, "", "", "left", 1, $completeCoord[0], $completeCoord[1])
    EndIf
+EndFunc
+
+Func CompleteQuestDialogNew()
+   Local $hWnd = GetNoxHwnd()
+
+   Local $iQuestDialogLeft = 1500
+   Local $iQuestDialogTop = 850
+   Local $iQuestDialogRight = 1900
+   Local $iQuestDialogBottom = 1050
+
+   Local $aQuestDialogTopLeft = GetRelativeCoords($hWnd, True, $iQuestDialogLeft, $iQuestDialogTop)
+   Local $aQuestDialogBottomRight = GetRelativeCoords($hWnd, True, $iQuestDialogRight, $iQuestDialogBottom)
+
+   ; Search for Green Complete button first
+   Local $greenCoord = FFNearestPixel($aQuestDialogTopLeft[0], $aQuestDialogTopLeft[1], $COLOR_TEAL, True, $aQuestDialogTopLeft[0], $aQuestDialogTopLeft[1], $aQuestDialogBottomRight[0], $aQuestDialogBottomRight[1], 0, $hWnd)
+
+   If IsArray($greenCoord) Then
+	  ControlClick($hWnd, "", "", "left", 1, $greenCoord[0] + 10, $greenCoord[1] + 10)
+
+	  ConsoleLog("Completing quest! Green")
+	  Return
+   EndIf
+
+   ; Search for Complete button
+   Local $completeCoord = FFNearestPixel($aQuestDialogTopLeft[0], $aQuestDialogTopLeft[1], $COLOR_ORANGE, True, $aQuestDialogTopLeft[0], $aQuestDialogTopLeft[1], $aQuestDialogBottomRight[0], $aQuestDialogBottomRight[1], 0, $hWnd)
+
+   If IsArray($completeCoord) Then
+	  ControlClick($hWnd, "", "", "left", 1, $completeCoord[0] + 10, $completeCoord[1] + 10)
+	  ConsoleLog($completeCoord[0] & " " & $completeCoord[1])
+
+	  ConsoleLog("Completing quest! Orange")
+   EndIf
+
+
+   Local $iQuestDialogLeft2 = 430
+   Local $iQuestDialogTop2 = 780
+   Local $iQuestDialogRight2 = 640
+   Local $iQuestDialogBottom2 = 950
+
+   Local $aQuestDialogTopLeft2 = GetRelativeCoords($hWnd, True, $iQuestDialogLeft2, $iQuestDialogTop2)
+   Local $aQuestDialogBottomRight2 = GetRelativeCoords($hWnd, True, $iQuestDialogRight2, $iQuestDialogBottom2)
+
+   ; Search for Green Complete button first
+   Local $greenCoord2 = FFNearestPixel($aQuestDialogTopLeft2[0], $aQuestDialogTopLeft2[1], $COLOR_TEAL, True, $aQuestDialogTopLeft2[0], $aQuestDialogTopLeft2[1], $aQuestDialogBottomRight2[0], $aQuestDialogBottomRight2[1], 0, $hWnd)
+
+   If IsArray($greenCoord2) Then
+	  ControlClick($hWnd, "", "", "left", 1, $greenCoord2[0] + 10, $greenCoord2[1] + 10)
+
+	  ConsoleLog("Completing quest! Green")
+	  Return
+   EndIf
+
+   ; Search for Complete button
+   Local $completeCoord2 = FFNearestPixel($aQuestDialogTopLeft2[0], $aQuestDialogTopLeft2[1], $COLOR_ORANGE, True, $aQuestDialogTopLeft2[0], $aQuestDialogTopLeft2[1], $aQuestDialogBottomRight2[0], $aQuestDialogBottomRight2[1], 0, $hWnd)
+
+   If IsArray($completeCoord2) Then
+	  ControlClick($hWnd, "", "", "left", 1, $completeCoord2[0] + 10, $completeCoord2[1] + 10)
+
+	  ConsoleLog("Completing quest! Orange")
+   EndIf
+
+
 EndFunc
 
 
 Func IsQuestRewardVisible()
+   Local $hWnd = GetNoxHwnd()
+
    ; Check if we are in the quest dialog
-   PixelSearch(1750, 40, 1760, 60, $COLOR_BLACK_REWARD_OVERLAY, 1, 1, GetNoxHwnd())
+   PixelSearch(1750, 40, 1760, 60, $COLOR_BLACK_REWARD_OVERLAY, 1, 1, $hWnd)
 
    If Not @error Then
 	  ConsoleLog("Quest reward is visible.")
@@ -276,7 +361,7 @@ Func IsQuestRewardVisible()
    EndIf
 
    ; Check if we are in the quest dialog
-   PixelSearch(1750, 40, 1760, 60, $COLOR_BLACK_REWARD_IN_MENU_OVERLAY, 1, 1, GetNoxHwnd())
+   PixelSearch(1750, 40, 1760, 60, $COLOR_BLACK_REWARD_IN_MENU_OVERLAY, 1, 1, $hWnd)
 
    If Not @error Then
 	  ConsoleLog("Quest reward is visible.")
@@ -287,23 +372,69 @@ Func IsQuestRewardVisible()
    Return False
 EndFunc
 
-Func ClaimQuestReward()
-   ; Search for Claim Reward button
-   Local $claimCoord = PixelSearch(800, 930, 1150, 1000, $COLOR_ORANGE, 0, 1, GetNoxHwnd())
 
-   If Not @error Then
-	  ConsoleLog("Clicking on Claim Reward! Position: " & $claimCoord[0] & " " & $claimCoord[1])
-	  ControlClick($gNoxTitle, "", "", "left", 1, $claimCoord[0], $claimCoord[1])
+Func IsClaimRewardVisible()
+   Local $hWnd = GetNoxHwnd()
+
+   Local $iClaimX = 850
+   Local $iClaimY = 950
+   Local $iClaimWidth = 225
+   Local $iClaimHeight = 30
+
+   Local $aClaimTopLeft = GetRelativeCoords($hWnd, True, $iClaimX, $iClaimY)
+   Local $aClaimBottomRight = GetRelativeCoords($hWnd, True, $iClaimX + $iClaimWidth, $iClaimY + $iClaimHeight)
+
+   ; Check for an orange button first
+   Local $iOrangeCount = FFColorCount($COLOR_ORANGE, 0, True, $aClaimTopLeft[0], $aClaimTopLeft[1], $aClaimTopLeft[0] + 1, $aClaimTopLeft[1] + 1, 0, $hWnd)
+
+   If $iOrangeCount = 0 Then Return False
+
+   ; Attempt at using OCR to check if "Claim Reward" is available
+   $ocr = OCR_GetTextFromWindow("ClaimReward-" & $gNoxTitle, $aClaimTopLeft[0], $aClaimTopLeft[1], $aClaimBottomRight[0], $aClaimBottomRight[1], $hWnd)
+
+   ; Remove erroneous characters
+   $ocr = StringReplace($ocr, ".", "")
+   $ocr = StringReplace($ocr, "'", "")
+   $ocr = StringReplace($ocr, ",", "")
+   $ocr = StringStripWS($ocr, 8)
+
+;~   ConsoleLog($ocr)
+
+   If StringInStr($ocr, "ClaimReward", 1) Then
+	  ConsoleLog("Claim reward is visible.")
+	  Return True
    EndIf
+
+   Return False
+EndFunc
+
+
+Func ClaimQuestReward()
+   Local $hWnd = GetNoxHwnd()
+
+   Local $iClaimX = 850
+   Local $iClaimY = 950
+
+   Local $aClaimTopLeft = GetRelativeCoords($hWnd, True, $iClaimX, $iClaimY)
+
+   ControlClick($hWnd, "", "", "left", 1, $aClaimTopLeft[0], $aClaimTopLeft[1])
+   ConsoleLog("Claiming reward!")
 EndFunc
 
 
 Func IsTeleportAvailable()
+   Local $hWnd = GetNoxHwnd()
+
+   Local $iTeleportX = 1000
+   Local $iTeleportY = 300
+
    If IsChecked($GUI_AutoTeleportCheckbox) Then
 	  ; Check if teleporting is available
-	  PixelSearch(1000, 300, 1170, 350, $COLOR_ORANGE, 0, 1, GetNoxHwnd())
+	  Local $aTeleport = GetRelativeCoords($hWnd, True, $iTeleportX, $iTeleportY)
 
-	  If Not @error Then
+	  Local $iOrangeCount = FFColorCount($COLOR_ORANGE, 0, True, $aTeleport[0], $aTeleport[1], $aTeleport[0] + 1, $aTeleport[1] + 1, 0, $hWnd)
+
+	  If $iOrangeCount > 0 Then
 		 ConsoleLog("We can teleport.")
 		 Return True
 	  EndIf
@@ -312,14 +443,20 @@ Func IsTeleportAvailable()
    Return False
 EndFunc
 
-Func Teleport()
-   Local $teleportCoord = PixelSearch(1000, 300, 1170, 350, $COLOR_ORANGE, 0, 1, GetNoxHwnd())
 
-   If Not @error Then
-	  ConsoleLog("Attempting to teleport!")
-	  ControlClick($gNoxTitle, "", "", "left", 1, $teleportCoord[0], $teleportCoord[1])
-   EndIf
+Func Teleport()
+   Local $hWnd = GetNoxHwnd()
+
+   Local $iTeleportX = 1000
+   Local $iTeleportY = 300
+
+   Local $aTeleport = GetRelativeCoords($hWnd, True, $iTeleportX, $iTeleportY)
+
+   ControlClick($hWnd, "", "", "left", 1, $aTeleport[0], $aTeleport[1])
+
+   ConsoleLog("Attempting to teleport!")
 EndFunc
+
 
 Func IsReviveVisible()
   Local $BLUE = 0x548FBA
@@ -337,14 +474,22 @@ Func IsReviveVisible()
 
   Local $hWnd = GetNoxHwnd()
 
-  Local $blueCount = FFColorCount($BLUE, 0, True, $reviveInTown_X + $WINDOW_X_OFFSET, $reviveInTown_Y + $WINDOW_Y_OFFSET, $reviveInTown_X + $WINDOW_X_OFFSET + 1, $reviveInTown_Y + $WINDOW_Y_OFFSET + 1, 0, $hWnd)
-  Local $greenCount = FFColorCount($GREEN, 0, True, $respawnToken_X + $WINDOW_X_OFFSET, $respawnToken_Y + $WINDOW_Y_OFFSET, $respawnToken_X + $WINDOW_X_OFFSET + 1, $respawnToken_Y + $WINDOW_Y_OFFSET + 1, 0, $hWnd)
-  Local $orangeCount = FFColorCount($ORANGE, 0, True, $reviveExaltation_X + $WINDOW_X_OFFSET, $reviveExaltation_Y + $WINDOW_Y_OFFSET, $reviveExaltation_X + $WINDOW_X_OFFSET + 1, $reviveExaltation_Y + $WINDOW_Y_OFFSET + 1, 0, $hWnd)
+  Local $aReviveInTown = GetRelativeCoords($hWnd, True, $reviveInTown_X, $reviveInTown_Y)
+
+  Local $aRespawnToken = GetRelativeCoords($hWnd, True, $respawnToken_X, $respawnToken_Y)
+
+  Local $aReviveExaltation = GetRelativeCoords($hWnd, True, $reviveExaltation_X, $reviveExaltation_Y)
+
+
+  Local $blueCount = FFColorCount($BLUE, 0, True, $aReviveInTown[0], $aReviveInTown[1], $aReviveInTown[0] + 1, $aReviveInTown[1] + 1, 0, $hWnd)
+  Local $greenCount = FFColorCount($GREEN, 0, True, $aRespawnToken[0], $aRespawnToken[1], $aRespawnToken[0] + 1, $aRespawnToken[1] + 1, 0, $hWnd)
+  Local $orangeCount = FFColorCount($ORANGE, 0, True, $aReviveExaltation[0], $aReviveExaltation[1], $aReviveExaltation[0] + 1, $aReviveExaltation[1] + 1, 0, $hWnd)
 
   If ($blueCount = 0 And $greenCount = 0 And $orangeCount = 0) Then Return False
 
   Return True
 EndFunc
+
 
 Func ReviveInTown()
   Local $BLUE = 0x548FBA
@@ -354,11 +499,13 @@ Func ReviveInTown()
 
   Local $hWnd = GetNoxHwnd()
 
-  Local $blueCount = FFColorCount($BLUE, 0, True, $reviveInTown_X + $WINDOW_X_OFFSET, $reviveInTown_Y + $WINDOW_Y_OFFSET, $reviveInTown_X + $WINDOW_X_OFFSET + 1, $reviveInTown_Y + $WINDOW_Y_OFFSET + 1, 0, $hWnd)
+  Local $aReviveInTown = GetRelativeCoords($hWnd, True, $reviveInTown_X, $reviveInTown_Y)
+
+  Local $blueCount = FFColorCount($BLUE, 0, True, $aReviveInTown[0], $aReviveInTown[1], $aReviveInTown[0] + 1, $aReviveInTown[1] + 1, 0, $hWnd)
 
   If ($blueCount > 0) Then
-    ControlClick($gNoxTitle, "", "", "left", 1, $reviveInTown_X + $WINDOW_X_OFFSET, $reviveInTown_Y + $WINDOW_Y_OFFSET)
+    ControlClick($hWnd, "", "", "left", 1, $aReviveInTown[0], $aReviveInTown[1])
 
-    ConsoleLog("Reviving in town")
+    ConsoleLog("Reviving in town.")
   EndIf
 EndFunc

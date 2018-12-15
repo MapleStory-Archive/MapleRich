@@ -17,6 +17,8 @@
 
 #include <ImageSearch2015.au3>
 
+#include <Utils.au3>
+
 
 
 
@@ -25,7 +27,7 @@
 global const $DEBUG_DEFAULT = 3
 global const $DEBUG_GRAPHIC = $DEBUG_DEFAULT + 4
 global const $WINDOW_CLASS = "" ; CLASS of the target Window
-global const $WINDOW_TITLE = "NoxPlayer1" ; TITLE of the target Window
+global const $WINDOW_TITLE = "NoxPlayer2" ; TITLE of the target Window
 
 global const $WINDOW_X_OFFSET = 1
 global const $WINDOW_Y_OFFSET = 30
@@ -37,6 +39,8 @@ global const $gDebug = True
 ;Opt("PixelCoordMode", 0)
 
 Global $hWnd = WinGetHandle($WINDOW_TITLE)
+
+ConsoleLog($hWnd)
 
 FFSetDebugMode($DEBUG_GRAPHIC) 	 ; Enable advanced (graphical) debug mode, so you will have traces + graphical feedback
 FFSetDefaultSnapShot(0)
@@ -69,37 +73,36 @@ While 1
 ;~    Else
 ;~ 	  ConsoleLog("Not autoquesting")
 ;~    EndIf
-;~    $aClientSize = WinGetClientSize($hWnd)
-;~    ConsoleLog($aClientSize[0] & " " & $aClientSize[1])
-   OpenTreasureBoxes()
+   $aClientSize = WinGetClientSize("0x00020642")
+   ConsoleLog($aClientSize[0] & " " & $aClientSize[1])
+   ;OpenTreasureBoxes()
+
+
 
    Sleep(2000)
 WEnd
 
-Func GetRelativeWindowSize($hWnd, $includeOffset, $left, $top, $right = 0, $bottom = 0)
-   $aClientSize = WinGetClientSize($hWnd)
+;~ Func GetRelativeWindowSize($hWnd, $includeOffset, $left, $top, $right = 0, $bottom = 0)
+;~    $aClientSize = WinGetClientSize($hWnd)
 
-   $winNoOffset_X = $aClientSize[0] - $WINDOW_X_OFFSET
-   $winNoOffset_Y = $aClientSize[1] - $WINDOW_Y_OFFSET
+;~    $winNoOffset_X = $aClientSize[0] - $WINDOW_X_OFFSET
+;~    $winNoOffset_Y = $aClientSize[1] - $WINDOW_Y_OFFSET
 
-   $relativeLeft = $left * $winNoOffset_X / 1920
-   $relativeTop = $top * $winNoOffset_Y / 1080
+;~    $relativeLeft = $left * $winNoOffset_X / 1920
+;~    $relativeTop = $top * $winNoOffset_Y / 1080
 
-   If $right > 0
-	  $relativeRight = $right * $winNoOffset_X / 1920
-   EndIf
+;~    If $right > 0
+;~ 	  $relativeRight = $right * $winNoOffset_X / 1920
+;~    EndIf
 
-   If $bottom > 0
-	  $relativeBottom = $bottom * $winNoOffset_Y / 1080
-   EndIf
+;~    If $bottom > 0
+;~ 	  $relativeBottom = $bottom * $winNoOffset_Y / 1080
+;~    EndIf
 
-   Return [$relativeLeft, $relativeTop, $relativeRight, $relativeBottom]
+;~    Return [$relativeLeft, $relativeTop, $relativeRight, $relativeBottom]
 
-EndFunc
+;~ EndFunc
 
-Func OpenTreasureBoxes
-
-EndFunc
 
 
 Func IsAutoQuestingOCR()

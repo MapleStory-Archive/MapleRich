@@ -12,43 +12,36 @@
 
 #include-once
 
-; 1 pixel border from left
-Local Const $iWindowOffsetX = 1
+; 2 pixel border from left
+Local Const $iWindowOffsetX = 2
 
 ; 30 pixel top toolbar
 Local Const $iWindowOffsetY = 30
 
 
-Func GetRelativeWindowSize($hWnd, $bIncludeOffset, $left, $top, $right = 0, $bottom = 0)
+Func GetRelativeCoords($hWnd, $bIncludeOffset, $x, $y)
    $aClientSize = WinGetClientSize($hWnd)
+
+   If @error Then
+	  ConsoleLog("Couldn't get window size.")
+	  Return @error
+   EndIf
 
    $winNoOffset_X = $aClientSize[0] - $iWindowOffsetX
    $winNoOffset_Y = $aClientSize[1] - $iWindowOffsetY
 
-   $relativeLeft = $left * $winNoOffset_X / 1920
-   $relativeTop = $top * $winNoOffset_Y / 1080
-
-   If $right > 0 Then
-	  $relativeRight = $right * $winNoOffset_X / 1920
-   EndIf
-
-   If $bottom > 0 Then
-	  $relativeBottom = $bottom * $winNoOffset_Y / 1080
-   EndIf
+   $relativeX = $x * $winNoOffset_X / 1920
+   $relativeY = $y * $winNoOffset_Y / 1080
 
    If $bIncludeOffset Then
-	  $relativeLeft += $iWindowOffsetX
-	  $relativeTop += $iWindowOffsetY
+	  $relativeX += $iWindowOffsetX
+	  $relativeY += $iWindowOffsetY
 
-	  If $right > 0 Then
-		 $relativeRight += $iWindowOffsetX
-	  EndIf
-
-	  If $bottom > 0 Then
-		 $relativeBottom += $iWindowOffsetY
-	  EndIf
    EndIf
 
-   Return [$relativeLeft, $relativeTop, $relativeRight, $relativeBottom]
+
+   Local $result = [$relativeX, $relativeY]
+
+   Return $result
 
 EndFunc

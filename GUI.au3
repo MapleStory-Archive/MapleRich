@@ -11,15 +11,22 @@
 ; Script Start - Add your code below here
 #include-once
 #include <GUIConstantsEx.au3>
+#include <StaticConstants.au3>
+#include <EditConstants.au3>
+#include <WindowsConstants.au3>
 
 #include <Globals.au3>
 
 Global $GUI
-Global $GUI_Width = 285, $GUI_Height = 400
-Global $GUI_NoxStatus, $GUI_GameStatus, $GUI_PlayerStatus, $GUI_BotStatus
+Global $GUI_Width = 685, $GUI_Height = 400
+Global $GUI_GameStatus, $GUI_PlayerStatus, $GUI_BotStatus
 Global $GUI_AutoTeleportCheckbox
 Global $GUI_StartStopButton
 Global $GUI_ProcessList
+Global $GUI_OutputLog
+
+Global $aProcessList
+
 
 Func InitGUI()
    $GUI = GUICreate($programTitle, $GUI_Width, $GUI_Height)
@@ -29,21 +36,21 @@ Func InitGUI()
 
    GUICtrlCreateLabel("Select a process", $x, $y, $groupWidth, 17)
 
+   GUICtrlCreateLabel("Output Log", $x + $groupWidth + 20, $y, $groupWidth, 17)
+
    $y += 15
 
    $GUI_ProcessList = GUICtrlCreateCombo("", $x, $y, $groupWidth, 40)
-   Local $aList = WinList($NOX_TITLE)
-   For $i = 1 To UBound($aList) - 1
-	  If $aList[$i][0] <> "" Then GUICtrlSetData($GUI_ProcessList, $aList[$i][0] & ";" & $aList[$i][1])
+   $aProcessList = WinList($NOX_TITLE)
+   For $i = 1 To UBound($aProcessList) - 1
+	  If $aProcessList[$i][0] <> "" Then GUICtrlSetData($GUI_ProcessList, $i & "; " & $aProcessList[$i][0] & "; " & $aProcessList[$i][1])
    Next
+
+   $GUI_OutputLog = GUICtrlCreateEdit($gLog, $x + $groupWidth + 20, $y, $GUI_Width - $groupWidth - 30, $GUI_Height - $y - 10, BitOR($ES_WANTRETURN, $WS_VSCROLL, $WS_HSCROLL, $ES_AUTOVSCROLL, $ES_AUTOHSCROLL, $ES_READONLY))
 
    $y += 30
 
    GUICtrlCreateGroup("Status", $x, $y, $groupWidth, $groupHeight)
-
-   $y += 15
-   GUICtrlCreateLabel("Nox:", $x + $groupItemOffset, $y, 40, 17)
-   $GUI_NoxStatus = GUICtrlCreateLabel($gNoxIsRunning ? "Detected" : "Not Detected", $x + 50, $y, 100, 17)
 
    $y += 15
    GUICtrlCreateLabel("Bot:", $x + $groupItemOffset, $y, 40, 17)
@@ -61,7 +68,9 @@ Func InitGUI()
 
    $y += 100
 
-   GUICtrlCreateLabel("Version " & $gVersion, $x + 110, $y, $groupWidth, 17)
+   GUICtrlCreateLabel("Version " & FileGetVersion(@AutoItExe), $x, $y, $groupWidth, 17, $SS_CENTER)
+
+
 
    ; Sets the callback function for when user selects a process
    GUICtrlSetOnEvent($GUI_ProcessList, "GUISelectProcess")
@@ -79,14 +88,14 @@ EndFunc
 
 
 Func UpdateGUI()
-   ; Update the Nox Status
-   GUICtrlSetData($GUI_NoxStatus, $gNoxIsRunning ? "Detected" : "Not Detected")
-
    ; Update the Bot Status
    GUICtrlSetData($GUI_BotStatus, $gBotStatus)
 
    ; Update the Start/Stop button
    GUICtrlSetData($GUI_StartStopButton, $gRun ? "Stop" : "Start")
+
+   ; Update the output log
+   ;GUICtrlSetData($GUI_OutputLog, $gLog)
 EndFunc
 
 
@@ -106,17 +115,20 @@ EndFunc
 Func GUISelectProcess()
    Local $sName = GUICtrlRead($GUI_ProcessList)
 
-   Local $aProcess = StringSplit($sName, ";")
+   Local $aProcess = StringSplit($sName, "; ")
 
-   $gNoxHwnd = $aProcess[2]
-   $gNoxTitle = $aProcess[1]
+   Local $iProcessIndex = $aProcess[1]
+
+   $gNoxHwnd = $aProcessList[$iProcessIndex][1]
+
+   $gNoxTitle = $aProcessList[$iProcessIndex][0]
 
    ConsoleLog("Selected process: " & $gNoxTitle)
 EndFunc
 
 
 Func GUIToggleAutoQuest()
-   ConsoleLog("Toggled")
+   ConsoleLog($gRun ? "Stopping bot." : "Starting bot.")
    $gRun = $gRun ? False : True
 
    If $gRun = False Then

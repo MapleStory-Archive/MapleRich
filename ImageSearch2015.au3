@@ -1,5 +1,6 @@
 #AutoIt3Wrapper_UseX64=y ; Set to Y or N depending on your situation/preference!!
 #include-once
+#include <GDIPlus.au3>
 #include <WinAPIFiles.au3> ; for _WinAPI_Wow64EnableWow64FsRedirection
 #include <ScreenCapture.au3> ;_ScreenCapture_CaptureWnd etc. ;using this in the example to create a test image, otherwise not neccessary here
 
@@ -149,7 +150,63 @@ Func _ImageSearchArea($findImage, $resultPosition, $x1, $y1, $right, $bottom, By
 		EndIf
 		Return True
 	EndIf
-EndFunc   ;==>_ImageSearchArea
+ EndFunc   ;==>_ImageSearchArea
+
+
+Func _ImageSearchWindow($hWnd, $findImage, $resultPosition = 1, $tolerance = 0, $transparency = 0)
+   If Not FileExists($findImage) Then Return "Image File not found"
+
+   If $tolerance < 0 Or $tolerance > 255 Then $tolerance = 0
+
+   If $h_ImageSearchDLL = -1 Then _ImageSearchStartup()
+
+   Local $left = 0
+   Local $top = 0
+   Local $right = 1920
+   Local $bottom = 1080
+
+   Local $x
+   Local $y
+
+   ; Initialize GDI+ library
+   _GDIPlus_Startup()
+
+   Local $hImageToFind = _GDIPlus_ImageLoadFromFile($findImage)
+
+   ConsoleWrite($hImageToFind & @CRLF)
+
+   Local $hImageToSearch = _ScreenCapture_CaptureWnd("", $hWnd)
+
+   ConsoleWrite($hImageToSearch & @CRLF)
+
+   If $transparency <> 0 Then $findImage = "*" & $transparency & " " & $findImage
+   If $tolerance > 0 Then $findImage = "*" & $tolerance & " " & $findImage
+
+	  ConsoleWrite("Find Image: " & $findImage & @CRLF)
+
+;~    $result = DllCall("ImageSearchDLL.dll", "str", "ImageSearch", "int", $left, "int", $top, "int", $right, "int", $bottom, "str", $findImage, "ptr", $hImageToSearch)
+   $result = DllCall($h_ImageSearchDLL, "str", "ImageSearch", "int", $left, "int", $top, "int", $right, "int", $bottom, "str", $findImage, "ptr", $hImageToSearch)
+
+
+   If @error Then Return "DllCall Error: " & @error
+
+	  ConsoleWrite("Result " & $result & @CRLF)
+
+   If $result = "0" Or Not IsArray($result) Or $result[0] = "0" Then Return False
+
+	  ConsoleWrite("Got past here" & @CRLF)
+
+   $array = StringSplit($result[0], "|")
+	If (UBound($array) >= 4) Then
+		$x = Int(Number($array[2])); Get the x,y location of the match
+		$y = Int(Number($array[3]))
+		If $resultPosition = 1 Then
+			$x = $x + Int(Number($array[4]) / 2); Account for the size of the image to compute the centre of search
+			$y = $y + Int(Number($array[5]) / 2)
+		EndIf
+		Return True
+	EndIf
+EndFunc
 
 ;===============================================================================
 ;
