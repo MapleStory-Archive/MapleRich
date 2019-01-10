@@ -11,7 +11,6 @@
 ; Script Start - Add your code below here
 
 Global $programTitle = "MapleRich"
-Global $gVersion = "0.2"
 
 Global $gDebug = true
 
@@ -20,6 +19,9 @@ Global $gRun = false
 Global $gBotStatus = "Inactive"
 
 Global $gLog = ""
+
+Global $gLoopDelay = 250
+Global $gQuestDelay = 500
 
 Global $gNoxIsRunning = false
 Global $gNoxHwnd

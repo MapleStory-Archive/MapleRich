@@ -509,3 +509,84 @@ Func ReviveInTown()
     ConsoleLog("Reviving in town.")
   EndIf
 EndFunc
+
+
+Func CloseAd()
+   Local $aText = ['Do', 'not', 'show', 'for', 'today']
+
+   Local $iDoNotShow_X = 335
+	Local $iDoNotShow_Y = 925
+	Local $iDoNotShow_Width = 275
+	Local $iDoNotShow_Height = 35
+
+   Local $iCloseAd_X = 1655
+   Local $iCloseAd_Y = 110
+
+   Local $hWnd = GetNoxHwnd()
+
+   Local $aDoNotShowTopLeft = GetRelativeCoords($hWnd, True, $iDoNotShow_X, $iDoNotShow_Y)
+   Local $aDoNotShowBottomRight = GetRelativeCoords($hWnd, True, $iDoNotShow_X + $iDoNotShow_Width, $iDoNotShow_Y + $iDoNotShow_Height)
+
+	$ocr = OCR_GetTextFromWindow("Ad-" & $gNoxTitle, $aDoNotShowTopLeft[0], $aDoNotShowTopLeft[1], $aDoNotShowBottomRight[0], $aDoNotShowBottomRight[1], $hWnd)
+
+   ; Trim leading and trailing spaces
+   $ocr = StringStripWS($ocr, 3)
+
+   $bFound = false
+
+   For $vText in $aText
+     If StringInStr($ocr, $vText) Then
+	 	$bFound = True
+		ExitLoop
+	 EndIf
+   Next
+
+	If Not $bFound Then
+		$ocr = OCR_GetTextFromWindow("Ad-" & $gNoxTitle, $aDoNotShowTopLeft[0], $aDoNotShowTopLeft[1], $aDoNotShowBottomRight[0], $aDoNotShowBottomRight[1], $hWnd, False)
+	EndIf
+
+	For $vText in $aText
+     If StringInStr($ocr, $vText) Then
+	 	$bFound = True
+		ExitLoop
+	 EndIf
+   Next
+
+   If $bFound Then
+      Local $aCloseAdButton = GetRelativeCoords($hWnd, True, $iCloseAd_X, $iCloseAd_Y)
+
+       ControlClick($hWnd, "", "", "left", 1, $aCloseAdButton[0], $aCloseAdButton[1])
+
+       ConsoleLog("Closing ad.")
+   EndIf
+	
+EndFunc
+
+
+Func CloseForfeitQuestModal()
+   Local $iTitle_X = 810
+	Local $iTitle_Y = 240
+	Local $iTitle_Width = 305
+	Local $iTitle_Height = 55
+
+   Local $iConfirm_X = 968
+   Local $iConfirm_Y = 800
+
+   Local $hWnd = GetNoxHwnd()
+
+   Local $aDoNotShowTopLeft = GetRelativeCoords($hWnd, True, $iTitle_X, $iTitle_Y)
+   Local $aDoNotShowBottomRight = GetRelativeCoords($hWnd, True, $iTitle_X + $iTitle_Width, $iTitle_Y + $iTitle_Height)
+
+	$ocr = OCR_GetTextFromWindow("Ad-" & $gNoxTitle, $aDoNotShowTopLeft[0], $aDoNotShowTopLeft[1], $aDoNotShowBottomRight[0], $aDoNotShowBottomRight[1], $hWnd)
+
+   ; Trim leading and trailing spaces
+   $ocr = StringStripWS($ocr, 3)
+
+   If StringInStr($ocr, "Forfeit") Then
+      Local $aCloseAdButton = GetRelativeCoords($hWnd, True, $iConfirm_X, $iConfirm_Y)
+
+       ControlClick($hWnd, "", "", "left", 1, $aCloseAdButton[0], $aCloseAdButton[1])
+
+       ConsoleLog("Closing 'Forfeit Quest' modal.")
+   EndIf
+EndFunc

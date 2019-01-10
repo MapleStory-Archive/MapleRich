@@ -10,73 +10,72 @@
 
 ; Script Start - Add your code below here
 #include-once
+#include <ButtonConstants.au3>
+#include <ComboConstants.au3>
+#include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
 #include <StaticConstants.au3>
-#include <EditConstants.au3>
 #include <WindowsConstants.au3>
 
 #include <Globals.au3>
 
 Global $GUI
-Global $GUI_Width = 685, $GUI_Height = 400
+Global $GUI_Width = 685, $GUI_Height = 450
 Global $GUI_GameStatus, $GUI_PlayerStatus, $GUI_BotStatus
 Global $GUI_AutoTeleportCheckbox
 Global $GUI_StartStopButton
 Global $GUI_ProcessList
 Global $GUI_OutputLog
+Global $GUI_LoopDelay, $GUI_QuestDelay, $GUI_ApplySettings
 
 Global $aProcessList
 
 
 Func InitGUI()
-   $GUI = GUICreate($programTitle, $GUI_Width, $GUI_Height)
+   $GUI = GUICreate($programTitle, 697, 451, -1, -1)
 
-   Local $x=5, $y=10, $groupWidth=275, $groupHeight=90
-   Local $groupItemOffset = 10
+   ; Process
+   $GUI_SelectProcessLabel = GUICtrlCreateLabel("Select a process", 8, 8, 83, 17)
+   $GUI_ProcessList = GUICtrlCreateCombo("", 8, 24, 275, 25, BitOR($CBS_DROPDOWN,$CBS_AUTOHSCROLL))
 
-   GUICtrlCreateLabel("Select a process", $x, $y, $groupWidth, 17)
-
-   GUICtrlCreateLabel("Output Log", $x + $groupWidth + 20, $y, $groupWidth, 17)
-
-   $y += 15
-
-   $GUI_ProcessList = GUICtrlCreateCombo("", $x, $y, $groupWidth, 40)
    $aProcessList = WinList($NOX_TITLE)
    For $i = 1 To UBound($aProcessList) - 1
 	  If $aProcessList[$i][0] <> "" Then GUICtrlSetData($GUI_ProcessList, $i & "; " & $aProcessList[$i][0] & "; " & $aProcessList[$i][1])
    Next
 
-   $GUI_OutputLog = GUICtrlCreateEdit($gLog, $x + $groupWidth + 20, $y, $GUI_Width - $groupWidth - 30, $GUI_Height - $y - 10, BitOR($ES_WANTRETURN, $WS_VSCROLL, $WS_HSCROLL, $ES_AUTOVSCROLL, $ES_AUTOHSCROLL, $ES_READONLY))
 
-   $y += 30
+   $Label2 = GUICtrlCreateLabel("Bot Status:", 8, 56, 56, 17)
+   $GUI_BotStatus = GUICtrlCreateLabel($gBotStatus, 72, 56, 210, 17)
 
-   GUICtrlCreateGroup("Status", $x, $y, $groupWidth, $groupHeight)
+   $Settings = GUICtrlCreateGroup("Settings", 8, 80, 275, 129)
+   $GUI_LoopDelay = GUICtrlCreateInput($gLoopDelay, 18, 120, 110, 21)
+   GUICtrlCreateLabel("Loop Delay (ms)", 18, 103, 80, 17)
+   $GUI_QuestDelay = GUICtrlCreateInput($gQuestDelay, 153, 120, 110, 21)
+   GUICtrlCreateLabel("Quest Delay (ms)", 154, 103, 84, 17)
+   $GUI_ApplySettings = GUICtrlCreateButton("Apply", 16, 168, 250, 25)
+   GUICtrlCreateGroup("", -99, -99, 1, 1)
 
-   $y += 15
-   GUICtrlCreateLabel("Bot:", $x + $groupItemOffset, $y, 40, 17)
-   $GUI_BotStatus = GUICtrlCreateLabel($gBotStatus, $x + 50, $y, 100, 17)
+   $Options = GUICtrlCreateGroup("Bot Options", 8, 224, 275, 89)
+   $GUI_AutoTeleportCheckbox = GUICtrlCreateCheckbox("Auto Teleport", 16, 248, 97, 17)
+   GUICtrlCreateGroup("", -99, -99, 1, 1)
 
-   $y += $groupHeight
-   GUICtrlCreateGroup("Options", $x, $y, $groupWidth, $groupHeight)
+   $GUI_StartStopButton = GUICtrlCreateButton("Start", 8, 344, 275, 33)
+   GUICtrlSetCursor (-1, 0)
 
-   $y += 15
-   $GUI_AutoTeleportCheckbox = GUICtrlCreateCheckbox("Auto Teleport", $x + $groupItemOffset, $y, 185, 25)
+   $GUI_VersionLabel = GUICtrlCreateLabel("Version " & FileGetVersion(@AutoItExe), 8, 416, 275, 17, $SS_CENTER)
 
-   $y += $groupHeight
-
-   $GUI_StartStopButton = GUICtrlCreateButton($gRun ? "Stop" : "Start", $x, $y, $groupWidth, 30)
-
-   $y += 100
-
-   GUICtrlCreateLabel("Version " & FileGetVersion(@AutoItExe), $x, $y, $groupWidth, 17, $SS_CENTER)
-
-
+   $GUI_OutputLogLabel = GUICtrlCreateLabel("Output Log", 304, 8, 57, 17)
+   $GUI_OutputLog = GUICtrlCreateEdit("", 305, 24, 389, 425, BitOR($GUI_SS_DEFAULT_EDIT,$ES_READONLY))
+   GUICtrlSetData(-1, $gLog)
 
    ; Sets the callback function for when user selects a process
    GUICtrlSetOnEvent($GUI_ProcessList, "GUISelectProcess")
 
    ; Sets the callback function for when user toggles auto quest
    GUICtrlSetOnEvent($GUI_StartStopButton, "GUIToggleAutoQuest")
+
+   ; Sets the callback function for when user applies settings
+   GUICtrlSetOnEvent($GUI_ApplySettings, "GUIApplySettings")
 
    ; Set callback function for when user exits the application
    GUISetOnEvent($GUI_EVENT_CLOSE, "GUICloseButton")
@@ -90,9 +89,6 @@ EndFunc
 Func UpdateGUI()
    ; Update the Bot Status
    GUICtrlSetData($GUI_BotStatus, $gBotStatus)
-
-   ; Update the Start/Stop button
-   GUICtrlSetData($GUI_StartStopButton, $gRun ? "Stop" : "Start")
 
    ; Update the output log
    ;GUICtrlSetData($GUI_OutputLog, $gLog)
@@ -131,11 +127,24 @@ Func GUIToggleAutoQuest()
    ConsoleLog($gRun ? "Stopping bot." : "Starting bot.")
    $gRun = $gRun ? False : True
 
+   ; Update the Start/Stop button
+   GUICtrlSetData($GUI_StartStopButton, $gRun ? "Stop" : "Start")
+
    If $gRun = False Then
 	  $gBotStatus = "Inactive"
    EndIf
 
    Return $gRun
+EndFunc
+
+Func GUIApplySettings()
+   $loopDelay = GUICtrlRead($GUI_LoopDelay)
+   $questDelay = GUICtrlRead($GUI_QuestDelay)
+
+   $gLoopDelay = $loopDelay
+   $gQuestDelay = $questDelay
+
+   ConsoleLog("Applied settings.")
 EndFunc
 
 Func IsChecked($idControlID)

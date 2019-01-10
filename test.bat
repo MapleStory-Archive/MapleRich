@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe" "C:\Users\Richard\Documents\MapleRich\images\Ad.bmp" "C:\Users\Richard\Documents\MapleRich\images\result" --psm 7 
